@@ -115,7 +115,7 @@ const Dashboard = () => {
             <p className="text-gray-500 text-sm">No department data available</p>
           )}
         </div>
-
+   
         <div className="card">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
           <div className="space-y-3">
