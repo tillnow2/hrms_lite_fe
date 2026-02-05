@@ -6,7 +6,23 @@ const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0',
   },
+});
+
+// Add request interceptor to add timestamp to all GET requests (cache busting)
+api.interceptors.request.use((config) => {
+  if (config.method === 'get') {
+    config.params = {
+      ...config.params,
+      _t: Date.now(),
+    };
+  }
+  return config;
+}, (error) => {
+  return Promise.reject(error);
 });
 
 export const employeesAPI = {
