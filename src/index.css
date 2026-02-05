@@ -29,3 +29,21 @@
     @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6;
   }
 }
+
+@layer utilities {
+  @keyframes loading-bar {
+    0% {
+      transform: scaleX(0);
+    }
+    50% {
+      transform: scaleX(0.5);
+    }
+    100% {
+      transform: scaleX(1);
+    }
+  }
+
+  .animate-loading-bar {
+    animation: loading-bar 1.5s ease-in-out infinite;
+  }
+}

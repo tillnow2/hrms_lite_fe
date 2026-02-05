@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Users, Calendar, CheckCircle, TrendingUp } from 'lucide-react'
+import toast from 'react-hot-toast'
 import LoadingSpinner from '../components/LoadingSpinner'
-import Alert from '../components/Alert'
+import LoadingBar from '../components/LoadingBar'
 import { dashboardAPI } from '../api/api'
 
 const Dashboard = () => {
+  const navigate = useNavigate()
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
 
   useEffect(() => {
     fetchStats()
@@ -16,16 +18,23 @@ const Dashboard = () => {
   const fetchStats = async () => {
     try {
       setLoading(true)
-      setError(null)
       const response = await dashboardAPI.getStats()
       setStats(response.data)
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to fetch dashboard statistics')
+      toast.error(err.response?.data?.message || 'Failed to fetch dashboard statistics')
     } finally {
       setLoading(false)
     }
   }
-  if (loading) return <LoadingSpinner />
+  
+  if (loading) {
+    return (
+      <>
+        <LoadingBar />
+        <LoadingSpinner />
+      </>
+    )
+  }
 
   const statCards = [
     {
@@ -69,8 +78,6 @@ const Dashboard = () => {
         <p className="mt-2 text-gray-600">Welcome to HRMS Lite - Overview of your HR metrics</p>
       </div>
 
-      {error && <Alert type="error" message={error} onClose={() => setError(null)} />}
-
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {statCards.map((stat, index) => {
           const Icon = stat.icon
@@ -112,20 +119,20 @@ const Dashboard = () => {
         <div className="card">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
           <div className="space-y-3">
-            <a
-              href="/employees"
-              className="block p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+            <button
+              onClick={() => navigate('/employees')}
+              className="block w-full text-left p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
             >
               <p className="font-medium text-gray-900">Manage Employees</p>
               <p className="text-sm text-gray-500 mt-1">Add, view, or remove employees</p>
-            </a>
-            <a
-              href="/attendance"
-              className="block p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+            </button>
+            <button
+              onClick={() => navigate('/attendance')}
+              className="block w-full text-left p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
             >
               <p className="font-medium text-gray-900">Mark Attendance</p>
               <p className="text-sm text-gray-500 mt-1">Record daily attendance for employees</p>
-            </a>
+            </button>
           </div>
         </div>
       </div>

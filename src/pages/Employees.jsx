@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { Plus, Search, Trash2, Users as UsersIcon } from 'lucide-react'
+import toast from 'react-hot-toast'
 import Modal from '../components/Modal'
 import LoadingSpinner from '../components/LoadingSpinner'
-import Alert from '../components/Alert'
+import LoadingBar from '../components/LoadingBar'
 import EmptyState from '../components/EmptyState'
 import { employeesAPI } from '../api/api'
 
@@ -11,9 +12,8 @@ const Employees = () => {
   const [filteredEmployees, setFilteredEmployees] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
-  const [error, setError] = useState(null)
-  const [success, setSuccess] = useState(null)
   const [showAddModal, setShowAddModal] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
   const [formData, setFormData] = useState({
     employeeId: '',
     fullName: '',
@@ -39,12 +39,11 @@ const Employees = () => {
   const fetchEmployees = async () => {
     try {
       setLoading(true)
-      setError(null)
       const response = await employeesAPI.getAll()
       setEmployees(response.data)
       setFilteredEmployees(response.data)
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to fetch employees')
+      toast.error(err.response?.data?.message || 'Failed to fetch employees')
     } finally {
       setLoading(false)
     }
@@ -81,32 +80,30 @@ const Employees = () => {
     if (!validateForm()) return
 
     try {
-      setError(null)
+      setSubmitting(true)
       await employeesAPI.create(formData)
-      setSuccess('Employee added successfully!')
+      toast.success('Employee added successfully!')
       setShowAddModal(false)
       setFormData({ employeeId: '', fullName: '', email: '', department: '' })
       setFormErrors({})
       fetchEmployees()
-      
-      setTimeout(() => setSuccess(null), 3000)
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to add employee')
+      toast.error(err.response?.data?.message || 'Failed to add employee')
+    } finally {
+      setSubmitting(false)
     }
   }
 
   const handleDeleteEmployee = async (id, name) => {
     if (!window.confirm(`Are you sure you want to delete ${name}?`)) return
 
+    const loadingToast = toast.loading('Deleting employee...')
     try {
-      setError(null)
       await employeesAPI.delete(id)
-      setSuccess('Employee deleted successfully!')
+      toast.success('Employee deleted successfully!', { id: loadingToast })
       fetchEmployees()
-      
-      setTimeout(() => setSuccess(null), 3000)
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to delete employee')
+      toast.error(err.response?.data?.message || 'Failed to delete employee', { id: loadingToast })
     }
   }
 
@@ -120,6 +117,7 @@ const Employees = () => {
 
   return (
     <div>
+      {loading && <LoadingBar />}
       <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Employees</h1>
@@ -133,9 +131,6 @@ const Employees = () => {
           Add Employee
         </button>
       </div>
-
-      {error && <Alert type="error" message={error} onClose={() => setError(null)} />}
-      {success && <Alert type="success" message={success} onClose={() => setSuccess(null)} />}
 
       <div className="card mb-6">
         <div className="relative">
@@ -314,11 +309,12 @@ const Employees = () => {
                 setFormErrors({})
               }}
               className="btn-secondary"
+              disabled={submitting}
             >
               Cancel
             </button>
-            <button type="submit" className="btn-primary">
-              Add Employee
+            <button type="submit" className="btn-primary" disabled={submitting}>
+              {submitting ? 'Adding...' : 'Add Employee'}
             </button>
           </div>
         </form>

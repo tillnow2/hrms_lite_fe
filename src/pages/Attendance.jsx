@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { Plus, Calendar as CalendarIcon, Filter } from 'lucide-react'
+import toast from 'react-hot-toast'
 import Modal from '../components/Modal'
 import LoadingSpinner from '../components/LoadingSpinner'
-import Alert from '../components/Alert'
+import LoadingBar from '../components/LoadingBar'
 import EmptyState from '../components/EmptyState'
 import { attendanceAPI, employeesAPI } from '../api/api'
 import { format } from 'date-fns'
@@ -12,9 +13,8 @@ const Attendance = () => {
   const [employees, setEmployees] = useState([])
   const [filteredAttendance, setFilteredAttendance] = useState([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [success, setSuccess] = useState(null)
   const [showAddModal, setShowAddModal] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
   const [filterDate, setFilterDate] = useState('')
   const [filterEmployee, setFilterEmployee] = useState('')
   const [formData, setFormData] = useState({
@@ -35,7 +35,6 @@ const Attendance = () => {
   const fetchData = async () => {
     try {
       setLoading(true)
-      setError(null)
       const [attendanceRes, employeesRes] = await Promise.all([
         attendanceAPI.getAll(),
         employeesAPI.getAll(),
@@ -44,7 +43,7 @@ const Attendance = () => {
       setEmployees(employeesRes.data)
       setFilteredAttendance(attendanceRes.data)
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to fetch data')
+      toast.error(err.response?.data?.message || 'Failed to fetch data')
     } finally {
       setLoading(false)
     }
@@ -93,9 +92,9 @@ const Attendance = () => {
     if (!validateForm()) return
 
     try {
-      setError(null)
+      setSubmitting(true)
       await attendanceAPI.create(formData)
-      setSuccess('Attendance marked successfully!')
+      toast.success('Attendance marked successfully!')
       setShowAddModal(false)
       setFormData({
         employeeId: '',
@@ -104,10 +103,10 @@ const Attendance = () => {
       })
       setFormErrors({})
       fetchData()
-      
-      setTimeout(() => setSuccess(null), 3000)
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to mark attendance')
+      toast.error(err.response?.data?.message || 'Failed to mark attendance')
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -152,6 +151,7 @@ const Attendance = () => {
 
   return (
     <div>
+      {loading && <LoadingBar />}
       <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Attendance</h1>
@@ -165,9 +165,6 @@ const Attendance = () => {
           Mark Attendance
         </button>
       </div>
-
-      {error && <Alert type="error" message={error} onClose={() => setError(null)} />}
-      {success && <Alert type="success" message={success} onClose={() => setSuccess(null)} />}
 
       <div className="card mb-6">
         <div className="flex items-center mb-4">
@@ -411,11 +408,12 @@ const Attendance = () => {
                 setFormErrors({})
               }}
               className="btn-secondary"
+              disabled={submitting}
             >
               Cancel
             </button>
-            <button type="submit" className="btn-primary">
-              Mark Attendance
+            <button type="submit" className="btn-primary" disabled={submitting}>
+              {submitting ? 'Marking...' : 'Mark Attendance'}
             </button>
           </div>
         </form>
