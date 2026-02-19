@@ -103,4 +103,14 @@ export const dashboardAPI = {
   },
 };
 
+export const chatbotAPI = {
+  sendMessage: async (message, history = []) => {
+    const response = await api.post('/ai/chat', {
+      message,
+      history,
+    });
+    return response;
+  },
+};
+
 export default api;

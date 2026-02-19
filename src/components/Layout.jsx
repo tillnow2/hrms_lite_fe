@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Users, Calendar, LayoutDashboard, Menu, X } from 'lucide-react'
+import Chatbot from './Chatbot'
 
 const Layout = ({ children }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false)
@@ -91,6 +92,8 @@ const Layout = ({ children }) => {
           </p>
         </div>
       </footer>
+
+      <Chatbot />
     </div>
   )
 }
